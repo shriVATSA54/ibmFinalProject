@@ -13,17 +13,6 @@ pipeline {
                 bat "pytest"
             }
         }
-
-        stage('Login to Docker Hub') {
-            steps {
-                withCredentials([usernamePassword(credentialsId: 'docker-creds', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
-                    bat 'echo %PASSWORD% | docker login -u %USERNAME% --password-stdin'
-                }
-                echo 'Login successfully'
-            }
-        }
-
-
 stage('Build Docker Image') {
             steps {
                 script {
