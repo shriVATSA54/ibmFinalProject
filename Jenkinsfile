@@ -3,9 +3,7 @@ pipeline {
     stages {
         stage('Setup') {
             steps {
-                bat 'dir %KUBECONFIG%'
-                bat 'icacls %KUBECONFIG% /grant Everyone:F'
-                bat 'dir %KUBECONFIG%'
+    
                 bat "pip install -r requirements.txt"
             }
         }
@@ -56,32 +54,6 @@ stage('Build Docker Image') {
                 }
             }
         }
-  
-
-        stage('Deploy to Staging') {
-            steps {
-                bat 'kubectl config use-context user@staging.us-east-1.eksctl.io'
-                bat 'kubectl config current-context'
-                bat "kubectl set image deployment/flask-app flask-app=%IMAGE_TAG%"
-            }
-        }
-
-        stage('Acceptance Test') {
-            steps {
-                script {
-                    def service = bat(script: "kubectl get svc flask-app-service -o jsonpath='{.status.loadBalancer.ingress[0].hostname}:{.spec.ports[0].port}'", returnStdout: true).trim()
-                    echo "${service}"
-                    bat "k6 run -e SERVICE=${service} acceptance-test.js"
-                }
-            }
-        }
-
-        stage('Deploy to Prod') {
-            steps {
-                bat 'kubectl config use-context user@prod.us-east-1.eksctl.io'
-                bat 'kubectl config current-context'
-                bat "kubectl set image deployment/flask-app flask-app=%IMAGE_TAG%"
-            }
-        }
+        
     }
 }
