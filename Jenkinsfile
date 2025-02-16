@@ -34,20 +34,40 @@ pipeline {
             }
         }
 
-        stage('Build Docker Image') {
+
+stage('Build Docker Image') {
             steps {
-                bat 'docker build -t %IMAGE_TAG% .'
-                echo "Docker image built successfully"
-                bat 'docker images'
+                script {
+                    // Build Docker image
+                    bat "docker build -t flask-app:latest ."
+                    echo "Docker image built successfully"
+                    bat 'docker images'
+                }
             }
         }
 
-        stage('Push Docker Image') {
+        // Add more stages for tests, deployment, etc.
+
+        stage('Push to DockerHub') {
             steps {
-                bat 'docker push %IMAGE_TAG%'
-                echo "Docker image pushed successfully"
+                echo "Push image to Docker"
+                withCredentials([usernamePassword(credentialsId: 'DockerHubCreds', passwordVariable: 'dockerHubPass', usernameVariable: 'dockerHubUser')]) {
+                    script {
+                        try {
+                            // Log into DockerHub
+                            bat "docker login -u ${env.dockerHubUser} -p ${env.dockerHubPass}"
+                            // Tag the Docker image
+                            bat "docker image tag flask-app:latest ${env.dockerHubUser}/flask-app:latest"
+                            // Push the Docker image to DockerHub
+                            bat "docker push ${env.dockerHubUser}/flask-app:latest"
+                        } catch (Exception e) {
+                            error "Docker push failed: ${e.getMessage()}"
+                        }
+                    }
+                }
             }
         }
+  
 
         stage('Deploy to Staging') {
             steps {
