@@ -2,11 +2,8 @@ pipeline {
     agent any
 
     environment {
-        
-        KUBECONFIG = credentials('kubeconfig-credentials-id')
-        IBM_ACCESS_KEY_ID = credentials('aws-access-key')
-        IBM_SECRET_ACCESS_KEY = credentials('aws-secret-key')
     }
+    
 
     stages {
         stage('Setup') {
@@ -44,8 +41,6 @@ stage('Build Docker Image') {
                 }
             }
         }
-
-        // Add more stages for tests, deployment, etc.
 
         stage('Push to DockerHub') {
             steps {
