@@ -87,12 +87,13 @@ pipeline {
         }
 
         stage('Get Service URL') {
-            steps {
-                script {
-                    def minikubeUrl = bat(script: 'minikube service flask-app-service --url', returnStdout: true).trim()
-                    echo "Application is accessible at: ${minikubeUrl}"
-                }
-            }
+    steps {
+        script {
+            // Port-forward the service to localhost
+            bat 'kubectl port-forward service/flask-app-service 5000:5000 &'
+            echo "Application is accessible at http://localhost:5000"
         }
+    }
+}
     }
 }
