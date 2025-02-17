@@ -12,19 +12,21 @@ pipeline {
                 bat "pytest"
             }
         }
-        
-        stage('Start Minikube') {
-            steps {
-                script {
-                    def minikubeStatus = bat(script: 'minikube status', returnStdout: true).trim()
-                    if (!minikubeStatus.contains("Running")) {
-                        bat 'minikube start'
-                    } else {
-                        echo "Minikube is already running!"
-                    }
-                }
+       stage('Start Minikube') {
+    steps {
+        script {
+            // Check if Minikube is running
+            def minikubeStatus = bat(script: 'minikube status', returnStdout: true).trim()
+            if (!minikubeStatus.contains("Running")) {
+                echo "Minikube is not running. Starting Minikube..."
+                bat 'minikube start'
+            } else {
+                echo "Minikube is already running."
             }
         }
+    }
+}
+
 
         stage('Build Docker Image') {
             steps {
@@ -71,12 +73,19 @@ pipeline {
         }
 
         stage('Apply Kubernetes Deployment') {
-            steps {
-                script {
-                    bat 'kubectl apply -f "$WORKSPACE/k8s/deployment.yaml"'
-                    bat 'kubectl apply -f "$WORKSPACE/k8s/service.yaml"'
-                }
+    steps {
+        script {
+            def minikubeStatus = bat(script: 'minikube status', returnStdout: true).trim()
+            if (!minikubeStatus.contains("Running")) {
+                error "Minikube is not running! Cannot apply Kubernetes deployment."
+            } else {
+                bat 'kubectl apply -f $WORKSPACE/k8s/deployment.yaml'
+                bat 'kubectl apply -f $WORKSPACE/k8s/service.yaml'
             }
+        }
+    }
+}
+
         }
 
         stage('Verify Deployment') {
