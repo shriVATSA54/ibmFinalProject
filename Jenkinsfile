@@ -16,18 +16,7 @@ pipeline {
         stage('Start Minikube') {
             steps {
                 script {
-                    def minikubeStatus = bat(script: 'minikube status', returnStdout: true).trim()
-                    if (!minikubeStatus.contains("Running")) {
-                        echo "Minikube is not running. Starting Minikube..."
-                        def startMinikube = bat(script: 'minikube start', returnStatus: true)
-                        if (startMinikube != 0) {
-                            error "Failed to start Minikube!"
-                        } else {
-                            echo "Minikube started successfully."
-                        }
-                    } else {
-                        echo "Minikube is already running."
-                    }
+                    bat "minikube start"
                 }
             }
         }
