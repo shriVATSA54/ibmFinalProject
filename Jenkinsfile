@@ -3,7 +3,6 @@ pipeline {
     stages {
         stage('Setup') {
             steps {
-    
                 bat "pip install -r requirements.txt"
             }
         }
@@ -13,37 +12,59 @@ pipeline {
                 bat "pytest"
             }
         }
+        
         stage('Start Minikube') {
             steps {
-                bat 'minikube start'
+                script {
+                    def minikubeStatus = bat(script: 'minikube status', returnStdout: true).trim()
+                    if (!minikubeStatus.contains("Running")) {
+                        bat 'minikube start'
+                    } else {
+                        echo "Minikube is already running!"
+                    }
+                }
             }
         }
-stage('Build Docker Image') {
+
+        stage('Build Docker Image') {
             steps {
                 script {
-                    // Build Docker image
-                    bat "docker build -t flask-app:latest ."
-                    echo "Docker image built successfully"
-                    bat 'docker images'
+                    def imageExists = bat(script: 'docker images -q flask-app:latest', returnStdout: true).trim()
+                    if (imageExists) {
+                        echo "Docker image already exists, skipping build."
+                    } else {
+                        bat "docker build --cache-from flask-app:latest -t flask-app:latest ."
+                        echo "Docker image built successfully"
+                    }
                 }
             }
         }
 
         stage('Push to DockerHub') {
             steps {
-                echo "Push image to Docker"
                 withCredentials([usernamePassword(credentialsId: 'DockerHubCreds', passwordVariable: 'dockerHubPass', usernameVariable: 'dockerHubUser')]) {
                     script {
-                        try {
-                            // Log into DockerHub
+                        def imageAlreadyPushed = bat(script: 'docker manifest inspect ${env.dockerHubUser}/flask-app:latest', returnStatus: true)
+                        if (imageAlreadyPushed == 0) {
+                            echo "Image already exists in DockerHub, skipping push."
+                        } else {
                             bat "docker login -u ${env.dockerHubUser} -p ${env.dockerHubPass}"
-                            // Tag the Docker image
                             bat "docker image tag flask-app:latest ${env.dockerHubUser}/flask-app:latest"
-                            // Push the Docker image to DockerHub
                             bat "docker push ${env.dockerHubUser}/flask-app:latest"
-                        } catch (Exception e) {
-                            error "Docker push failed: ${e.getMessage()}"
                         }
+                    }
+                }
+            }
+        }
+
+        stage('Verify Deployment Files') {
+            steps {
+                script {
+                    def files = bat(script: 'dir /b k8s', returnStdout: true).trim()
+                    echo "K8s folder files:\n${files}"
+
+                    if (!files.contains("deployment.yaml") || !files.contains("service.yaml")) {
+                        error "Deployment files not found in k8s/ folder!"
                     }
                 }
             }
@@ -51,27 +72,27 @@ stage('Build Docker Image') {
 
         stage('Apply Kubernetes Deployment') {
             steps {
-                bat 'kubectl apply -f deployment.yaml'
-                bat 'kubectl apply -f service.yaml'
+                script {
+                    bat 'kubectl apply -f "$WORKSPACE/k8s/deployment.yaml"'
+                    bat 'kubectl apply -f "$WORKSPACE/k8s/service.yaml"'
+                }
             }
         }
+
         stage('Verify Deployment') {
             steps {
                 bat 'kubectl get pods'
                 bat 'kubectl get svc'
             }
         }
+
         stage('Get Service URL') {
             steps {
                 script {
-                    def svc_output = bat(script: 'kubectl get svc flask-app-service', returnStdout: true).trim()
-                    echo "Service Details:\n${svc_output}"
-
-                    def minikube_url = bat(script: 'minikube service flask-app-service --url', returnStdout: true).trim()
-                    echo "Application is accessible at: ${minikube_url}"
+                    def minikubeUrl = bat(script: 'minikube service flask-app-service --url', returnStdout: true).trim()
+                    echo "Application is accessible at: ${minikubeUrl}"
                 }
             }
         }
-        
     }
 }
