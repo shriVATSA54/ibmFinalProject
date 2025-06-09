@@ -35,7 +35,7 @@ This project demonstrates a fully automated CI/CD pipeline for a Python Flask ap
 
 ---
 ## Results
-![Results](image.png)
+![Results](templates/image.png)
 
 ---
 ## 📄 Certificate of Completion
