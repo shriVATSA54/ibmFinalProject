@@ -48,3 +48,15 @@ This project demonstrates a fully automated CI/CD pipeline for a Python Flask ap
 
 **Happy DevOpsing!** 🚀
 
+📌 Project Title: CI/CD Pipeline for Automated Deployment with Kubernetes & Docker
+✅ Description: Designed and implemented a CI/CD pipeline using Jenkins, Docker, and Kubernetes to automate application deployment. The pipeline includes automated builds, testing, containerization, and deployment to a Kubernetes cluster, reducing deployment errors and improving release efficiency.
+🛠 Tech Stack: Jenkins, Docker, Kubernetes, Minikube, GitHub, PyTest
+
+🔹 Key Features:
+
+Implemented CI/CD pipeline with Jenkins & GitHub for automated deployment
+Built and pushed Docker images to DockerHub, ensuring consistent builds
+Used Minikube for local Kubernetes cluster setup and deployment
+Deployed application using kubectl apply (YAML configurations for Deployment & Service)
+Verified deployment with kubectl get pods & kubectl get svc
+Implemented unit testing with PyTest to maintain code quality
