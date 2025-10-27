@@ -1,8 +1,8 @@
-FROM  python:3.11.8-slim
+FROM python:3.11.9-slim-bookworm
 
 
-# Upgrade Alpine system packages first
-RUN apk upgrade --no-cache
+
+RUN apt-get update && apt-get upgrade -y && apt-get clean
 
 WORKDIR /application
 
