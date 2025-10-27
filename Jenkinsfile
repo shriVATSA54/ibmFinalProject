@@ -51,7 +51,8 @@ pipeline {
                 }
             }
         }
-             stage('Trivy Image Scan') {
+             
+        stage('Trivy Image Scan') {
       steps {
         bat '''
           echo Scanning Docker image...
@@ -59,7 +60,7 @@ pipeline {
           docker run --rm ^
             -v /var/run/docker.sock:/var/run/docker.sock ^
             -v "%USERPROFILE%\\.trivy-cache":/root/.cache/trivy ^
-            aquasec/trivy:latest image flask-app:%BUILD_NUMBER% ^
+            aquasec/trivy:latest image flask-app:latest ^
             --severity HIGH,CRITICAL ^
             --ignore-unfixed ^
             --exit-code 1 ^
@@ -67,7 +68,7 @@ pipeline {
         '''
       }
          }
-         
+
 
         stage('Push to DockerHub') {
             steps {
