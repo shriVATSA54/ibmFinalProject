@@ -1,4 +1,5 @@
-FROM python:3.11.8-alpine3.18
+FROM  python:3.11.8-slim
+
 
 # Upgrade Alpine system packages first
 RUN apk upgrade --no-cache
