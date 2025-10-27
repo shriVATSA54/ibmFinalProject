@@ -12,6 +12,7 @@ pipeline {
                 bat "pytest"
             }
         }
+
         stage('Trivy Scan Filesystem') {
             steps {
           bat '''
@@ -28,20 +29,7 @@ pipeline {
         '''
             }
         }
-         stage('Trivy Image Scan') {
-      steps {
-        bat '''
-          echo Scanning Docker image...
-
-          docker run --rm ^
-            -v /var/run/docker.sock:/var/run/docker.sock ^
-            -v "%USERPROFILE%\\.trivy-cache":/root/.cache/trivy ^
-            aquasec/trivy:latest flask-app:%BUILD_NUMBER% ^
-            --severity HIGH,CRITICAL ^
-            --ignore-unfixed ^
-            --exit-code 1 ^
-            --format table
-        '''
+    
         stage('Start Minikube') {
             steps {
                 script {
@@ -63,6 +51,23 @@ pipeline {
                 }
             }
         }
+             stage('Trivy Image Scan') {
+      steps {
+        bat '''
+          echo Scanning Docker image...
+
+          docker run --rm ^
+            -v /var/run/docker.sock:/var/run/docker.sock ^
+            -v "%USERPROFILE%\\.trivy-cache":/root/.cache/trivy ^
+            aquasec/trivy:latest image flask-app:%BUILD_NUMBER% ^
+            --severity HIGH,CRITICAL ^
+            --ignore-unfixed ^
+            --exit-code 1 ^
+            --format table
+        '''
+      }
+         }
+         
 
         stage('Push to DockerHub') {
             steps {
