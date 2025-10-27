@@ -45,7 +45,7 @@ pipeline {
                     if (imageExists) {
                         echo "Docker image already exists, skipping build."
                     } else {
-                        bat "docker build --cache-from flask-app:latest -t flask-app:latest ."
+                        bat "docker build --no-cache -t flask-app:latest ."
                         echo "Docker image built successfully"
                     }
                 }
