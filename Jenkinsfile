@@ -51,10 +51,6 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 script {
-                    def imageExists = bat(script: 'docker images -q ${FULL_IMAGE}', returnStdout: true).trim()
-                    if (imageExists) {
-                        echo "Docker image already exists, skipping build."
-                    } else {
                         bat "docker build --no-cache -t ${FULL_IMAGE}  --build-arg BUILD_NUMBER=${env.BUILD_NUMBER} ."
                         echo "Docker image built successfully"
                     }
@@ -64,7 +60,7 @@ pipeline {
              
         stage('Trivy Image Scan') {
       steps {
-        bat '''
+        bat """
           echo Scanning Docker image...
           docker run --rm ^
             -v "%cd%":/project ^
@@ -74,7 +70,7 @@ pipeline {
             --ignore-unfixed ^
             --exit-code 1 ^
             --format table
-        '''
+        """
       }
          }
 
