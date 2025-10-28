@@ -67,13 +67,13 @@ pipeline {
         bat '''
           echo Scanning Docker image...
           docker run --rm ^
-           -v /var/run/docker.sock:/var/run/docker.sock ^
-           -v "%USERPROFILE%\.trivy-cache:/root/.cache/trivy" ^
-           aquasec/trivy:latest image %FULL_IMAGE% ^
-           --severity HIGH,CRITICAL ^
-           --ignore-unfixed ^
-           --exit-code 1 ^
-           --format table
+            -v "%cd%":/project ^
+            -v "%USERPROFILE%\\.trivy-cache":/root/.cache/trivy ^
+            aquasec/trivy:latest fs /project ^
+            --severity HIGH,CRITICAL ^
+            --ignore-unfixed ^
+            --exit-code 1 ^
+            --format table
         '''
       }
          }
