@@ -1,13 +1,15 @@
 pipeline {
     agent any
     stages {
-    
-        environment{
+    stage("Environment Preparation") {
+        steps {
+            script {
                IMAGE_NAME = "flask-app"
                IMAGE_TAG = "${env.BUILD_NUMBER}"  // Unique tag per build
                FULL_IMAGE = "${IMAGE_NAME}:${IMAGE_TAG}"
+               }
         }
-    
+    }
     
         stage('Setup') {
             steps {
