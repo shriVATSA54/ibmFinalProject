@@ -11,19 +11,19 @@ pipeline {
         }
     }
     
-        stage('Setup') {
+    stage('Setup') {
             steps {
                 bat "pip install -r requirements.txt"
             }
         }
 
-        stage('Test') {
+    stage('Test') {
             steps {
                 bat "pytest"
             }
         }
 
-        stage('Trivy Scan Filesystem') {
+    stage('Trivy Scan Filesystem') {
             steps {
           bat '''
           echo Running Trivy filesystem scan...
@@ -40,7 +40,7 @@ pipeline {
             }
         }
     
-        stage('Start Minikube') {
+    stage('Start Minikube') {
             steps {
                 script {
                     bat "minikube start"
@@ -48,7 +48,7 @@ pipeline {
             }
         }
 
-        stage('Build Docker Image') {
+    stage('Build Docker Image') {
             steps {
                 script {
                         bat "docker build --no-cache -t ${FULL_IMAGE}  --build-arg BUILD_NUMBER=${env.BUILD_NUMBER} ."
@@ -58,7 +58,7 @@ pipeline {
             }
         }
              
-        stage('Trivy Image Scan') {
+    stage('Trivy Image Scan') {
       steps {
         bat """
           echo Scanning Docker image...
@@ -75,7 +75,7 @@ pipeline {
          }
 
 
-        stage('Push to DockerHub') {
+    stage('Push to DockerHub') {
             steps {
                 withCredentials([usernamePassword(credentialsId: 'DockerHubCreds', passwordVariable: 'dockerHubPass', usernameVariable: 'dockerHubUser')]) {
                     script {
@@ -92,7 +92,7 @@ pipeline {
             }
         }
 
-        stage('Verify Deployment Files') {
+    stage('Verify Deployment Files') {
             steps {
                 script {
                     def files = bat(script: 'dir /b k8s', returnStdout: true).trim()
@@ -105,7 +105,7 @@ pipeline {
             }
         }
 
-        stage('Apply Kubernetes Deployment') {
+    stage('Apply Kubernetes Deployment') {
             steps {
                 script {
                     def minikubeStatus = bat(script: 'minikube status', returnStdout: true).trim()
@@ -119,21 +119,22 @@ pipeline {
             }
         }
 
-        stage('Verify Deployment') {
+    stage('Verify Deployment') {
             steps {
                 bat 'kubectl get pods'
                 bat 'kubectl get svc'
             }
         }
 
-        stage('Get Service URL') {
+    stage('Get Service URL') {
     steps {
         script {
             // Port-forward the service to localhost
             bat 'kubectl port-forward service/flask-app-service 5000:5000 &'
             echo "Application is accessible at http://localhost:5000"
         }
+      }
     }
-}
+  
     }
 
