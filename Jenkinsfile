@@ -56,7 +56,7 @@ pipeline {
                     }
                 }
             }
-        }
+        
              
     stage('Trivy Image Scan') {
       steps {
@@ -135,6 +135,6 @@ pipeline {
         }
       }
     }
-  
-    }
+ }
+}
 
