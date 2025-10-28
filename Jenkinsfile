@@ -1,5 +1,6 @@
 pipeline {
     agent any
+    stages {
     stage("Environtment Preparation"){
         steps{
                IMAGE_NAME = "flask-app"
@@ -7,7 +8,7 @@ pipeline {
                FULL_IMAGE = "${IMAGE_NAME}:${IMAGE_TAG}"
         }
     }
-    stages {
+    
         stage('Setup') {
             steps {
                 bat "pip install -r requirements.txt"
