@@ -1,5 +1,12 @@
 pipeline {
     agent any
+    stage("Environtment Preparation"){
+        steps{
+               IMAGE_NAME = "flask-app"
+               IMAGE_TAG = "${env.BUILD_NUMBER}"  // Unique tag per build
+               FULL_IMAGE = "${IMAGE_NAME}:${IMAGE_TAG}"
+        }
+    }
     stages {
         stage('Setup') {
             steps {
@@ -41,11 +48,11 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 script {
-                    def imageExists = bat(script: 'docker images -q flask-app:latest', returnStdout: true).trim()
+                    def imageExists = bat(script: 'docker images -q ${FULL_IMAGE}', returnStdout: true).trim()
                     if (imageExists) {
                         echo "Docker image already exists, skipping build."
                     } else {
-                        bat "docker build --no-cache -t flask-app:latest ."
+                        bat "docker build --no-cache -t ${FULL_IMAGE}  --build-arg BUILD_NUMBER=${env.BUILD_NUMBER} ."
                         echo "Docker image built successfully"
                     }
                 }
@@ -60,7 +67,7 @@ pipeline {
           docker run --rm ^
             -v /var/run/docker.sock:/var/run/docker.sock ^
             -v "%USERPROFILE%\\.trivy-cache":/root/.cache/trivy ^
-            aquasec/trivy:latest image flask-app:latest ^
+            aquasec/trivy:latest image ${FULL_IMAGE} ^
             --severity HIGH,CRITICAL ^
             --ignore-unfixed ^
             --exit-code 1 ^
@@ -74,13 +81,13 @@ pipeline {
             steps {
                 withCredentials([usernamePassword(credentialsId: 'DockerHubCreds', passwordVariable: 'dockerHubPass', usernameVariable: 'dockerHubUser')]) {
                     script {
-                        def imageAlreadyPushed = bat(script: 'docker manifest inspect ${env.dockerHubUser}/flask-app:latest', returnStatus: true)
+                        def imageAlreadyPushed = bat(script: 'docker manifest inspect ${env.dockerHubUser}/${FULL_IMAGE}', returnStatus: true)
                         if (imageAlreadyPushed == 0) {
                             echo "Image already exists in DockerHub, skipping push."
                         } else {
                             bat "docker login -u ${env.dockerHubUser} -p ${env.dockerHubPass}"
-                            bat "docker image tag flask-app:latest ${env.dockerHubUser}/flask-app:latest"
-                            bat "docker push ${env.dockerHubUser}/flask-app:latest"
+                            bat "docker image tag ${FULL_IMAGE} ${env.dockerHubUser}/${FULL_IMAGE}"
+                            bat "docker push ${env.dockerHubUser}/${FULL_IMAGE}"
                         }
                     }
                 }

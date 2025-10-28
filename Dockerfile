@@ -1,6 +1,7 @@
 FROM python:3.11.9-slim-bookworm
 
-
+ARG BUILD_NUMBER
+ENV BUILD_NUMBER=${BUILD_NUMBER}
 
 RUN apt-get update && apt-get upgrade -y && apt-get clean
 
