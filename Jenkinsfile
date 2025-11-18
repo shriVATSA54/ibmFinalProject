@@ -13,7 +13,7 @@ pipeline {
     stage('Setup') {
     steps {
         sh '''
-            export PATH="/usr/local/bin:/opt/homebrew/bin:$PATH"
+       
             python3 --version
             pip3 --version
             pip3 install -r requirements.txt
