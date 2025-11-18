@@ -83,19 +83,19 @@ stage('Test') {
                 '''
             }
         }
+stage('Push to DockerHub') {
+    steps {
+        withCredentials([usernamePassword(credentialsId: 'DockerHubCreds', passwordVariable: 'dockerHubPass', usernameVariable: 'dockerHubUser')]) {
+            sh """
+    IMAGE_TAGGED=${dockerHubUser}/${FULL_IMAGE}
+    docker login -u ${dockerHubUser} -p ${dockerHubPass}
+    docker image tag ${FULL_IMAGE} \${IMAGE_TAGGED}
+    docker push \${IMAGE_TAGGED}
+    """
 
-        stage('Push to DockerHub') {
-            steps {
-                withCredentials([usernamePassword(credentialsId: 'DockerHubCreds', passwordVariable: 'dockerHubPass', usernameVariable: 'dockerHubUser')]) {
-                    sh '''
-                        IMAGE_TAGGED=${env.dockerHubUser}/${FULL_IMAGE}
-                        docker login -u ${env.dockerHubUser} -p ${env.dockerHubPass}
-                        docker image tag ${FULL_IMAGE} ${IMAGE_TAGGED}
-                        docker push ${IMAGE_TAGGED}
-                    '''
-                }
-            }
         }
+    }
+}
 
         stage('Verify Deployment Files') {
             steps {
