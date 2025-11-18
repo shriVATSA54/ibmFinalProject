@@ -9,6 +9,8 @@ WORKDIR /application
 
 COPY requirements.txt .
 # Force upgrade Python packages to match Trivy fixed versions
+
+RUN pip install --upgrade pip setuptools wheel
 RUN pip install --upgrade --no-cache-dir -r requirements.txt
 
 # Copy application code last (cache efficiency)
