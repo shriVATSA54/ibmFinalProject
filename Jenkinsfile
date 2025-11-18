@@ -19,13 +19,9 @@ pipeline {
        stage('Setup') {
     steps {
         sh '''
-            echo "Using Python version:"
-            /opt/homebrew/bin/python3 --version
-            echo "Using pip version:"
-            /opt/homebrew/bin/python3 -m pip --version
-
-            # Install dependencies only for the user, not system-wide
-            /opt/homebrew/bin/python3 -m pip install --user -r requirements.txt
+            python3 --version
+            pip3 --version
+            pip3 install -r requirements.txt
         '''
     }
 }
