@@ -16,22 +16,20 @@ pipeline {
             }
         }
 
-        stage('Setup') {
-            steps {
-                sh '''
-                    echo "Using Python version:"
-                    ${PYTHON_BIN} --version
-                    echo "Using pip version:"
-                    ${PYTHON_BIN} -m pip --version
+       stage('Setup') {
+    steps {
+        sh '''
+            echo "Using Python version:"
+            /opt/homebrew/bin/python3 --version
+            echo "Using pip version:"
+            /opt/homebrew/bin/python3 -m pip --version
 
-                    # Upgrade pip just in case
-                    ${PYTHON_BIN} -m pip install --upgrade pip
+            # Install dependencies only for the user, not system-wide
+            /opt/homebrew/bin/python3 -m pip install --user -r requirements.txt
+        '''
+    }
+}
 
-                    # Install dependencies
-                    ${PYTHON_BIN} -m pip install -r requirements.txt
-                '''
-            }
-        }
 
         stage('Test') {
             steps {
