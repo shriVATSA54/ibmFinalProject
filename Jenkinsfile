@@ -28,13 +28,13 @@ pipeline {
           sh '''
           echo Running Trivy filesystem scan...
 
-          docker run --rm ^
-            -v "%cd%":/project ^
-            -v "%USERPROFILE%\\.trivy-cache":/root/.cache/trivy ^
-            aquasec/trivy:latest fs /project ^
-            --severity HIGH,CRITICAL ^
-            --ignore-unfixed ^
-            --exit-code 1 ^
+          docker run --rm \
+            -v "$(pwd)":/project \
+            -v "$HOME/.trivy-cache":/root/.cache/trivy \
+            aquasec/trivy:latest fs /project \
+            --severity HIGH,CRITICAL \
+            --ignore-unfixed \
+            --exit-code 1 \
             --format table
         '''
             }
@@ -62,14 +62,15 @@ pipeline {
       steps {
         sh """
           echo Scanning Docker image...
-          docker run --rm ^
-            -v "%cd%":/project ^
-            -v "%USERPROFILE%\\.trivy-cache":/root/.cache/trivy ^
-            aquasec/trivy:latest fs /project ^
-            --severity HIGH,CRITICAL ^
-            --ignore-unfixed ^
-            --exit-code 1 ^
-            --format table
+          docker run --rm \
+            -v /var/run/docker.sock:/var/run/docker.sock \
+            -v \$HOME/.trivy-cache:/root/.cache/trivy \
+            aquasec/trivy:latest image \
+            --severity HIGH,CRITICAL \
+            --ignore-unfixed \
+            --exit-code 1 \
+            --format table \
+            ${FULL_IMAGE}
         """
       }
          }
@@ -79,7 +80,7 @@ pipeline {
             steps {
                 withCredentials([usernamePassword(credentialsId: 'DockerHubCreds', passwordVariable: 'dockerHubPass', usernameVariable: 'dockerHubUser')]) {
                     script {
-                        def imageAlreadyPushed = sh(script: 'docker manifest inspect ${env.dockerHubUser}/${FULL_IMAGE}', returnStatus: true)
+                        def imageAlreadyPushed = sh(script: "docker manifest inspect ${env.dockerHubUser}/${FULL_IMAGE}", returnStatus: true)
                         if (imageAlreadyPushed == 0) {
                             echo "Image already exists in DockerHub, skipping push."
                         } else {
@@ -95,7 +96,7 @@ pipeline {
     stage('Verify Deployment Files') {
             steps {
                 script {
-                    def files = sh(script: 'dir /b k8s', returnStdout: true).trim()
+                    def files = sh(script: 'ls k8s', returnStdout: true).trim()
                     echo "K8s folder files:\n${files}"
 
                     if (!files.contains("deployment.yaml") || !files.contains("service.yaml")) {
@@ -137,4 +138,3 @@ pipeline {
     }
  }
 }
-
