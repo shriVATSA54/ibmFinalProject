@@ -13,19 +13,19 @@ pipeline {
     
     stage('Setup') {
             steps {
-                bat "pip install -r requirements.txt"
+                sh "pip install -r requirements.txt"
             }
         }
 
     stage('Test') {
             steps {
-                bat "pytest"
+                sh "pytest"
             }
         }
 
     stage('Trivy Scan Filesystem') {
             steps {
-          bat '''
+          sh '''
           echo Running Trivy filesystem scan...
 
           docker run --rm ^
@@ -43,7 +43,7 @@ pipeline {
     stage('Start Minikube') {
             steps {
                 script {
-                    bat "minikube start"
+                    sh "minikube start"
                 }
             }
         }
@@ -51,7 +51,7 @@ pipeline {
     stage('Build Docker Image') {
             steps {
                 script {
-                        bat "docker build --no-cache -t ${FULL_IMAGE}  --build-arg BUILD_NUMBER=${env.BUILD_NUMBER} ."
+                        sh "docker build --no-cache -t ${FULL_IMAGE}  --build-arg BUILD_NUMBER=${env.BUILD_NUMBER} ."
                         echo "Docker image built successfully"
                     }
                 }
@@ -60,7 +60,7 @@ pipeline {
              
     stage('Trivy Image Scan') {
       steps {
-        bat """
+        sh """
           echo Scanning Docker image...
           docker run --rm ^
             -v "%cd%":/project ^
@@ -79,13 +79,13 @@ pipeline {
             steps {
                 withCredentials([usernamePassword(credentialsId: 'DockerHubCreds', passwordVariable: 'dockerHubPass', usernameVariable: 'dockerHubUser')]) {
                     script {
-                        def imageAlreadyPushed = bat(script: 'docker manifest inspect ${env.dockerHubUser}/${FULL_IMAGE}', returnStatus: true)
+                        def imageAlreadyPushed = sh(script: 'docker manifest inspect ${env.dockerHubUser}/${FULL_IMAGE}', returnStatus: true)
                         if (imageAlreadyPushed == 0) {
                             echo "Image already exists in DockerHub, skipping push."
                         } else {
-                            bat "docker login -u ${env.dockerHubUser} -p ${env.dockerHubPass}"
-                            bat "docker image tag ${FULL_IMAGE} ${env.dockerHubUser}/${FULL_IMAGE}"
-                            bat "docker push ${env.dockerHubUser}/${FULL_IMAGE}"
+                            sh "docker login -u ${env.dockerHubUser} -p ${env.dockerHubPass}"
+                            sh "docker image tag ${FULL_IMAGE} ${env.dockerHubUser}/${FULL_IMAGE}"
+                            sh "docker push ${env.dockerHubUser}/${FULL_IMAGE}"
                         }
                     }
                 }
@@ -95,7 +95,7 @@ pipeline {
     stage('Verify Deployment Files') {
             steps {
                 script {
-                    def files = bat(script: 'dir /b k8s', returnStdout: true).trim()
+                    def files = sh(script: 'dir /b k8s', returnStdout: true).trim()
                     echo "K8s folder files:\n${files}"
 
                     if (!files.contains("deployment.yaml") || !files.contains("service.yaml")) {
@@ -108,12 +108,12 @@ pipeline {
     stage('Apply Kubernetes Deployment') {
             steps {
                 script {
-                    def minikubeStatus = bat(script: 'minikube status', returnStdout: true).trim()
+                    def minikubeStatus = sh(script: 'minikube status', returnStdout: true).trim()
                     if (!minikubeStatus.contains("Running")) {
                         error "Minikube is not running! Cannot apply Kubernetes deployment."
                     } else {
-                        bat 'kubectl apply -f k8s/deployment.yaml'
-                        bat 'kubectl apply -f k8s/service.yaml'
+                        sh 'kubectl apply -f k8s/deployment.yaml'
+                        sh 'kubectl apply -f k8s/service.yaml'
                     }
                 }
             }
@@ -121,8 +121,8 @@ pipeline {
 
     stage('Verify Deployment') {
             steps {
-                bat 'kubectl get pods'
-                bat 'kubectl get svc'
+                sh 'kubectl get pods'
+                sh 'kubectl get svc'
             }
         }
 
@@ -130,7 +130,7 @@ pipeline {
     steps {
         script {
             // Port-forward the service to localhost
-            bat 'kubectl port-forward service/flask-app-service 5000:5000 &'
+            sh 'kubectl port-forward service/flask-app-service 5000:5000 &'
             echo "Application is accessible at http://localhost:5000"
         }
       }
