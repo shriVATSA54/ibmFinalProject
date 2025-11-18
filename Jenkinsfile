@@ -23,7 +23,7 @@ pipeline {
 
     stage('Test') {
             steps {
-                sh "pytest"
+                sh "/opt/homebrew/bin/pytest"
             }
         }
 
