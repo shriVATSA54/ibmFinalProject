@@ -8,6 +8,7 @@ pipeline {
         PYTHON_BIN = "/opt/homebrew/bin/python3"
     }
 
+
     stages {
 
         stage("Environment Preparation") {
@@ -15,26 +16,27 @@ pipeline {
                 echo "Preparing build environment..."
             }
         }
-
-       stage('Setup') {
-    steps {
-        sh '''
-            python3 --version
-            pip3 --version
-            pip3 install -r requirements.txt
-        '''
-    }
+stage('Setup') {
+  steps {
+    sh '''
+      echo "Creating venv with ${PYTHON_BIN}"
+      ${PYTHON_BIN} -m venv .venv
+      . .venv/bin/activate
+      python -m pip install --upgrade pip
+      pip install -r requirements.txt
+    '''
+  }
 }
 
-
-        stage('Test') {
-            steps {
-                sh '''
-                    echo "Running pytest..."
-                    /opt/homebrew/bin/pytest
-                '''
-            }
-        }
+stage('Test') {
+  steps {
+    sh '''
+      echo "Running pytest inside .venv"
+      . .venv/bin/activate
+      python -m pytest -q
+    '''
+  }
+}
 
         stage('Trivy Scan Filesystem') {
             steps {
