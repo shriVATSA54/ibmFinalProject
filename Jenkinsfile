@@ -10,12 +10,16 @@ pipeline {
                }
         }
     }
-    
     stage('Setup') {
-            steps {
-                sh "pip install -r requirements.txt"
-            }
+    steps {
+        sh '''
+            export PATH="/usr/local/bin:/opt/homebrew/bin:$PATH"
+            python3 --version
+            pip3 --version
+            pip3 install -r requirements.txt
+        '''
         }
+     }
 
     stage('Test') {
             steps {
